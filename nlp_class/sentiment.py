@@ -7,26 +7,26 @@
 # i.e. It is not optimized for anything.
 
 # Author: http://lazyprogrammer.me
-from __future__ import print_function, division
-from future.utils import iteritems
-from builtins import range
-# Note: you may need to update your version of future
-# sudo pip install -U future
+from __future__ import division, print_function
 
+from builtins import range
 
 import nltk
 import numpy as np
-from sklearn.utils import shuffle
-
+from bs4 import BeautifulSoup
+from future.utils import iteritems
 from nltk.stem import WordNetLemmatizer
 from sklearn.linear_model import LogisticRegression
-from bs4 import BeautifulSoup
+from sklearn.utils import shuffle
+
+# Note: you may need to update your version of future
+# sudo pip install -U future
 
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
 # from http://www.lextek.com/manuals/onix/stopwords1.html
-stopwords = set(w.rstrip() for w in open('stopwords.txt'))
+stopwords = set(w.rstrip() for w in open("stopwords.txt"))
 
 # note: an alternative source of stopwords
 # from nltk.corpus import stopwords
@@ -34,12 +34,15 @@ stopwords = set(w.rstrip() for w in open('stopwords.txt'))
 
 # load the reviews
 # data courtesy of http://www.cs.jhu.edu/~mdredze/datasets/sentiment/index2.html
-positive_reviews = BeautifulSoup(open('electronics/positive.review').read(), features="html5lib")
-positive_reviews = positive_reviews.findAll('review_text')
+positive_reviews = BeautifulSoup(
+    open("electronics/positive.review").read(), features="html.parser"
+)
+positive_reviews = positive_reviews.findAll("review_text")
 
-negative_reviews = BeautifulSoup(open('electronics/negative.review').read(), features="html5lib")
-negative_reviews = negative_reviews.findAll('review_text')
-
+negative_reviews = BeautifulSoup(
+    open("electronics/negative.review").read(), features="html.parser"
+)
+negative_reviews = negative_reviews.findAll("review_text")
 
 
 # first let's just try to tokenize the text using nltk's tokenizer
@@ -53,12 +56,17 @@ negative_reviews = negative_reviews.findAll('review_text')
 # so it might only add noise to our model.
 # so let's create a function that does all this pre-processing for us
 
+
 def my_tokenizer(s):
-    s = s.lower() # downcase
-    tokens = nltk.tokenize.word_tokenize(s) # split string into words (tokens)
-    tokens = [t for t in tokens if len(t) > 2] # remove short words, they're probably not useful
-    tokens = [wordnet_lemmatizer.lemmatize(t) for t in tokens] # put words into base form
-    tokens = [t for t in tokens if t not in stopwords] # remove stopwords
+    s = s.lower()  # downcase
+    tokens = nltk.tokenize.word_tokenize(s)  # split string into words (tokens)
+    tokens = [
+        t for t in tokens if len(t) > 2
+    ]  # remove short words, they're probably not useful
+    tokens = [
+        wordnet_lemmatizer.lemmatize(t) for t in tokens
+    ]  # put words into base form
+    tokens = [t for t in tokens if t not in stopwords]  # remove stopwords
     return tokens
 
 
@@ -92,13 +100,14 @@ print("len(word_index_map):", len(word_index_map))
 
 # now let's create our input matrices
 def tokens_to_vector(tokens, label):
-    x = np.zeros(len(word_index_map) + 1) # last element is for the label
+    x = np.zeros(len(word_index_map) + 1)  # last element is for the label
     for t in tokens:
         i = word_index_map[t]
         x[i] += 1
-    x = x / x.sum() # normalize it before setting label
+    x = x / x.sum()  # normalize it before setting label
     x[-1] = label
     return x
+
 
 N = len(positive_tokenized) + len(negative_tokenized)
 # (N x D+1 matrix - keeping them together for now so we can shuffle more easily later
@@ -106,26 +115,34 @@ data = np.zeros((N, len(word_index_map) + 1))
 i = 0
 for tokens in positive_tokenized:
     xy = tokens_to_vector(tokens, 1)
-    data[i,:] = xy
+    data[i, :] = xy
     i += 1
 
 for tokens in negative_tokenized:
     xy = tokens_to_vector(tokens, 0)
-    data[i,:] = xy
+    data[i, :] = xy
     i += 1
 
 # shuffle the data and create train/test splits
 # try it multiple times!
 orig_reviews, data = shuffle(orig_reviews, data)
 
-X = data[:,:-1]
-Y = data[:,-1]
+X = data[:, :-1]
+Y = data[:, -1]
 
 # last 100 rows will be test
-Xtrain = X[:-100,]
-Ytrain = Y[:-100,]
-Xtest = X[-100:,]
-Ytest = Y[-100:,]
+Xtrain = X[
+    :-100,
+]
+Ytrain = Y[
+    :-100,
+]
+Xtest = X[
+    -100:,
+]
+Ytest = Y[
+    -100:,
+]
 
 model = LogisticRegression()
 model.fit(Xtrain, Ytrain)
@@ -144,7 +161,7 @@ for word, index in iteritems(word_index_map):
 
 # check misclassified examples
 preds = model.predict(X)
-P = model.predict_proba(X)[:,1] # p(y = 1 | x)
+P = model.predict_proba(X)[:, 1]  # p(y = 1 | x)
 
 # since there are many, just print the "most" wrong samples
 minP_whenYis1 = 1
@@ -167,8 +184,13 @@ for i in range(N):
             wrong_negative_prediction = preds[i]
             maxP_whenYis0 = p
 
-print("Most wrong positive review (prob = %s, pred = %s):" % (minP_whenYis1, wrong_positive_prediction))
+print(
+    "Most wrong positive review (prob = %s, pred = %s):"
+    % (minP_whenYis1, wrong_positive_prediction)
+)
 print(wrong_positive_review)
-print("Most wrong negative review (prob = %s, pred = %s):" % (maxP_whenYis0, wrong_negative_prediction))
+print(
+    "Most wrong negative review (prob = %s, pred = %s):"
+    % (maxP_whenYis0, wrong_negative_prediction)
+)
 print(wrong_negative_review)
-
