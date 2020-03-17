@@ -1,24 +1,27 @@
 # Course URL:
 # https://deeplearningcourses.com/c/natural-language-processing-with-deep-learning-in-python
 # https://udemy.com/natural-language-processing-with-deep-learning-in-python
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+import sys
 from builtins import range
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from gensim.models import KeyedVectors
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+
 # Note: you may need to update your version of future
 # sudo pip install -U future
 
 
-import sys
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-from gensim.models import KeyedVectors
 
 
 # data from https://www.cs.umb.edu/~smimarog/textmining/datasets/
-train = pd.read_csv('../large_files/r8-train-all-terms.txt', header=None, sep='\t')
-test = pd.read_csv('../large_files/r8-test-all-terms.txt', header=None, sep='\t')
+train = pd.read_csv('largefiles/r8-train-all-terms.txt', header=None, sep='\t')
+test = pd.read_csv('largefiles/r8-test-all-terms.txt', header=None, sep='\t')
 train.columns = ['label', 'content']
 test.columns = ['label', 'content']
 
@@ -31,7 +34,7 @@ class GloveVectorizer:
     word2vec = {}
     embedding = []
     idx2word = []
-    with open('../large_files/glove.6B/glove.6B.50d.txt') as f:
+    with open('largefiles/glove.6B/glove.6B.50d.txt') as f:
       # is just a space-separated text file in the format:
       # word vec[0] vec[1] vec[2] ...
       for line in f:
@@ -83,7 +86,7 @@ class Word2VecVectorizer:
   def __init__(self):
     print("Loading in word vectors...")
     self.word_vectors = KeyedVectors.load_word2vec_format(
-      '../large_files/GoogleNews-vectors-negative300.bin',
+      'largefiles/GoogleNews-vectors-negative300.bin',
       binary=True
     )
     print("Finished loading in word vectors")
@@ -138,9 +141,7 @@ Ytest = test.label
 
 
 # create the model, train it, print scores
-model = RandomForestClassifier(n_estimators=200)
+model = RandomForestClassifier(n_estimators=20)
 model.fit(Xtrain, Ytrain)
 print("train score:", model.score(Xtrain, Ytrain))
 print("test score:", model.score(Xtest, Ytest))
-
-

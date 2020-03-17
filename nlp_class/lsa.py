@@ -3,43 +3,72 @@
 # https://www.udemy.com/data-science-natural-language-processing-in-python
 
 # Author: http://lazyprogrammer.me
-from __future__ import print_function, division
+from __future__ import division, print_function
+
 from builtins import range
+
+import matplotlib.pyplot as plt
+import nltk
+import numpy as np
+from nltk.stem import WordNetLemmatizer
+from sklearn.decomposition import TruncatedSVD
+
 # Note: you may need to update your version of future
 # sudo pip install -U future
 
 
-import nltk
-import numpy as np
-import matplotlib.pyplot as plt
-from nltk.stem import WordNetLemmatizer
-from sklearn.decomposition import TruncatedSVD
 
 
 wordnet_lemmatizer = WordNetLemmatizer()
 
-titles = [line.rstrip() for line in open('all_book_titles.txt')]
+titles = [line.rstrip() for line in open("all_book_titles.txt")]
 
 # copy tokenizer from sentiment example
-stopwords = set(w.rstrip() for w in open('stopwords.txt'))
+stopwords = set(w.rstrip() for w in open("stopwords.txt"))
 
 # note: an alternative source of stopwords
 # from nltk.corpus import stopwords
 # stopwords.words('english')
 
 # add more stopwords specific to this problem
-stopwords = stopwords.union({
-    'introduction', 'edition', 'series', 'application',
-    'approach', 'card', 'access', 'package', 'plus', 'etext',
-    'brief', 'vol', 'fundamental', 'guide', 'essential', 'printed',
-    'third', 'second', 'fourth', })
+stopwords = stopwords.union(
+    {
+        "introduction",
+        "edition",
+        "series",
+        "application",
+        "approach",
+        "card",
+        "access",
+        "package",
+        "plus",
+        "etext",
+        "brief",
+        "vol",
+        "fundamental",
+        "guide",
+        "essential",
+        "printed",
+        "third",
+        "second",
+        "fourth",
+    }
+)
+
+
 def my_tokenizer(s):
-    s = s.lower() # downcase
-    tokens = nltk.tokenize.word_tokenize(s) # split string into words (tokens)
-    tokens = [t for t in tokens if len(t) > 2] # remove short words, they're probably not useful
-    tokens = [wordnet_lemmatizer.lemmatize(t) for t in tokens] # put words into base form
-    tokens = [t for t in tokens if t not in stopwords] # remove stopwords
-    tokens = [t for t in tokens if not any(c.isdigit() for c in t)] # remove any digits, i.e. "3rd edition"
+    s = s.lower()  # downcase
+    tokens = nltk.tokenize.word_tokenize(s)  # split string into words (tokens)
+    tokens = [
+        t for t in tokens if len(t) > 2
+    ]  # remove short words, they're probably not useful
+    tokens = [
+        wordnet_lemmatizer.lemmatize(t) for t in tokens
+    ]  # put words into base form
+    tokens = [t for t in tokens if t not in stopwords]  # remove stopwords
+    tokens = [
+        t for t in tokens if not any(c.isdigit() for c in t)
+    ]  # remove any digits, i.e. "3rd edition"
     return tokens
 
 
@@ -53,7 +82,9 @@ index_word_map = []
 error_count = 0
 for title in titles:
     try:
-        title = title.encode('ascii', 'ignore').decode('utf-8') # this will throw exception if bad characters
+        title = title.encode("ascii", "ignore").decode(
+            "utf-8"
+        )  # this will throw exception if bad characters
         all_titles.append(title)
         tokens = my_tokenizer(title)
         all_tokens.append(tokens)
@@ -68,7 +99,12 @@ for title in titles:
         error_count += 1
 
 
-print("Number of errors parsing file:", error_count, "number of lines in file:", len(titles))
+print(
+    "Number of errors parsing file:",
+    error_count,
+    "number of lines in file:",
+    len(titles),
+)
 if error_count == len(titles):
     print("There is no data to do anything with! Quitting...")
     exit()
@@ -82,22 +118,24 @@ def tokens_to_vector(tokens):
         x[i] = 1
     return x
 
+
 N = len(all_tokens)
 D = len(word_index_map)
-X = np.zeros((D, N)) # terms will go along rows, documents along columns
+X = np.zeros((D, N))  # terms will go along rows, documents along columns
 i = 0
 for tokens in all_tokens:
-    X[:,i] = tokens_to_vector(tokens)
+    X[:, i] = tokens_to_vector(tokens)
     i += 1
+
 
 def main():
     svd = TruncatedSVD()
     Z = svd.fit_transform(X)
-    plt.scatter(Z[:,0], Z[:,1])
+    plt.scatter(Z[:, 0], Z[:, 1])
     for i in range(D):
-        plt.annotate(s=index_word_map[i], xy=(Z[i,0], Z[i,1]))
+        plt.annotate(s=index_word_map[i], xy=(Z[i, 0], Z[i, 1]))
     plt.show()
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()

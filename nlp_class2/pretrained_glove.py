@@ -2,9 +2,14 @@
 # https://www.udemy.com/data-science-natural-language-processing-in-python
 
 # Author: http://lazyprogrammer.me
-from __future__ import print_function, division
-from future.utils import iteritems
+from __future__ import division, print_function
+
 from builtins import range
+
+import numpy as np
+from future.utils import iteritems
+from sklearn.metrics.pairwise import pairwise_distances
+
 # Note: you may need to update your version of future
 # sudo pip install -U future
 
@@ -13,8 +18,6 @@ from builtins import range
 # GloVe: https://nlp.stanford.edu/projects/glove/
 # Direct link: http://nlp.stanford.edu/data/glove.6B.zip
 
-import numpy as np
-from sklearn.metrics.pairwise import pairwise_distances
 
 
 def dist1(a, b):
@@ -92,7 +95,7 @@ print('Loading word vectors...')
 word2vec = {}
 embedding = []
 idx2word = []
-with open('../large_files/glove.6B/glove.6B.50d.txt', encoding='utf-8') as f:
+with open('largefiles/glove.6B/glove.6B.50d.txt', encoding='utf-8') as f:
   # is just a space-separated text file in the format:
   # word vec[0] vec[1] vec[2] ...
   for line in f:
